@@ -31,7 +31,7 @@ export const fetchNewsArticles = async (): Promise<Array<NewsArticle>> => {
 
         USE_LOCAL ?
             //* local NEWS_API (django)
-            json.map(async (article: any) => {
+            allData.map(async (article: any) => {
 
                 const authorResponse = await fetch(`${AUTHOR_BASE_URL}/${article.author_id}`)
                 const author = await authorResponse.json()
