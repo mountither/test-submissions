@@ -11,49 +11,52 @@ const NEWS_URL = `https://newsapi.org/v2/top-headlines?country=au&category=busin
 const LOCAL_NEWS_URL = 'http://localhost:8000/api/top_headlines'
 const AUTHOR_BASE_URL = 'http://localhost:8000/api/author'
 
+// defaults to news api
+const USE_LOCAL = false;
 
 export const fetchNewsArticles = async (): Promise<Array<NewsArticle>> => {
     try {
 
         const newsResponse = await fetch(
-            // NEWS_URL
-            LOCAL_NEWS_URL
+            USE_LOCAL ? LOCAL_NEWS_URL : NEWS_URL
         )
 
         const json = await newsResponse.json()
 
         //* NEWS_API
-        // const allData: Array<any> = json.articles;
+        const allData: Array<any> = USE_LOCAL ? json : json.articles;
 
 
         const data: Array<NewsArticle> = []
 
-        //* NEWS_API
-        // grab only the required fields.
-        // allData.map((article) => {
-        //     data.push({
-        //         title: article.title,
-        //         desc: article.description,
-        //         imgURL: article.urlToImage,
-        //         author: article.author,
-        //         datePublished: new Date(article.publishedAt),
-        //     })
-        // })
+        USE_LOCAL ?
+            //* local NEWS_API (django)
+            json.map(async (article: any) => {
 
-        //* local NEWS_API (django)
-        json.map(async (article: any) => {
+                const authorResponse = await fetch(`${AUTHOR_BASE_URL}/${article.author_id}`)
+                const author = await authorResponse.json()
 
-            const authorResponse = await fetch(`${AUTHOR_BASE_URL}/${article.author_id}`)
-            const author = await authorResponse.json()
-
-            data.push({
-                title: article.title,
-                desc: article.desc,
-                imgURL: article.img_url,
-                author: author[0].name,
-                datePublished: new Date(article.date_pub),
+                data.push({
+                    title: article.title,
+                    desc: article.desc,
+                    imgURL: article.img_url,
+                    author: author[0].name,
+                    datePublished: new Date(article.date_pub),
+                })
             })
-        })
+            :
+            //* NEWS_API
+            allData.map((article) => {
+                data.push({
+                    title: article.title,
+                    desc: article.description,
+                    imgURL: article.urlToImage,
+                    author: article.author,
+                    datePublished: new Date(article.publishedAt),
+                })
+            })
+
+
 
         return data
 
